@@ -21,7 +21,7 @@ function componentResolve (r, parent) {
     var component = fullComponentName(r, json)
     if (!component) {
         if (isLocalComponent(r, json)) {
-            return componentEntry(resolveLocalDependency(parentDir));
+            return componentEntry(resolveLocalDependency(parentDir, r));
         }
     }
     var componentPath = closestInstalledComponent(parentDir, component)
@@ -60,7 +60,11 @@ if (require.main != module) {
     // Patch _resoveFilename to try to resolve components first,
     // falling back to node modules.
     Module._resolveFilename = function(request, parent) {
-      return componentResolve(request, parent) || _resolveFilename(request, parent)
+        try {
+            return _resolveFilename(request, parent)
+        } catch (e) {
+            return componentResolve(request, parent)
+        }
     }
 }
 
