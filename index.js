@@ -4,6 +4,7 @@ var Module = require("module")
 
 var closestComponentJsonPath = require("./closest-component-json-path")
 var closestInstalledComponent = require("./closest-installed-component")
+var resolveLocalDependency = require("./resolve-local-dependency")
 var fullComponentName = require("./full-component-name")
 
 var _resolveFilename = Module._resolveFilename
@@ -18,12 +19,21 @@ function componentResolve (r, parent) {
     var componentsDir = path.join(path.dirname(jsonPath), "components")
     var json = read(jsonPath);
     var component = fullComponentName(r, json)
+    if (!component) {
+        if (isLocalComponent(r, json)) {
+            return componentEntry(resolveLocalDependency(parentDir));
+        }
+    }
     var componentPath = closestInstalledComponent(parentDir, component)
     
     if (!componentPath) {
         throw Exception("Component not installed " + component)
     }
     
+    return componentEntry(componentPath)
+}
+
+function componentEntry (componentPath) {
     var componentJson = readComponentJson(componentPath)
     var entry = path.join(componentPath, componentJson.main || "index.js")
     return entry
@@ -31,6 +41,11 @@ function componentResolve (r, parent) {
 
 function readComponentJson(componentPath) {
     return read(path.join(componentPath, "component.json"))
+}
+
+function isLocalComponent (name, json) {
+  var locals = json.local || json.locals || [];
+  return locals.indexOf(name) != -1;
 }
 
 function isRelative (p) {

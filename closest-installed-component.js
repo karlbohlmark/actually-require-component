@@ -1,44 +1,45 @@
 var fs = require("fs")
 var path = require("path")
+var semver = require("semver")
 
 module.exports = closestInstalledComponent;
 
 function closestInstalledComponent (dir, module) {
     var p
-    while (dir != '/') {
-        p = path.join(dir, "components", module, "component.json")
+    do {
+        p = path.join(dir, "components", module)
         if (fs.existsSync(p)) {
-            return path.dirname(p);
+            var versions = fs.readdirSync(p);
+            var maxVersion = versions.sort(semver.compare).pop()
+            var modulePath = path.join(p, maxVersion);
+            return modulePath
         } else {
             dir = path.dirname(dir);
         }
-    }
+    } while (dir != '/')
 }
 
 
 // Tests
 if (!module.parent) {
-    var assert = require('better-assert')
+    var assert = require('assert')
     var mock = require('mock-fs');
     mock({
-      '/test/some/path/components': {
-        'some-module': {
+      '/test/some/path/components/some-module/0.0.1': {
           'component.json': '{}'
-        }
       }
     });
     var componentsPath = closestInstalledComponent('/test/some/path', 'some-module');
     mock.restore();
-    assert(componentJsonPath == '/test/some/path/components/some-module',
-           "components in root dir");
+    assert.equal(componentsPath, '/test/some/path/components/some-module/0.0.1');
 
     mock({
       '/test/some/path': {},
-      '/test/components/some-module': '{}'
+      '/test/components/some-module/0.0.1': '{}'
     });
 
     componentsPath = closestInstalledComponent('/test/some/path', 'some-module');
     mock.restore();
-    assert(componentJsonPath == '/test/components/some-module',
+    assert(componentsPath == '/test/components/some-module/0.0.1',
            "components in grand parent dir");
 }
