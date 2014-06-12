@@ -25,7 +25,6 @@ function componentResolve (r, parent) {
         }
     }
     var componentPath = closestInstalledComponent(parentDir, component)
-    
     if (!componentPath) {
         throw Exception("Component not installed " + component)
     }
@@ -74,13 +73,12 @@ if (require.main === module) {
     var mock = require('mock-fs');
     mock({
       '/test/some/path/component.json': '{"dependencies": {"karlbohlmark/my-module": "*"}}',
-      '/test/some/path/components/karlbohlmark/my-module/component.json': '{"main": "start.js"}'
+      '/test/some/path/components/karlbohlmark/my-module/0.0.1/component.json': '{"main": "start.js"}'
     });
     var parentModule = {
         filename: "/test/some/path/module.js"
     }
     var moduleEntryPath = componentResolve('my-module', parentModule);
-    console.log("entry: ", moduleEntryPath)
     assert(moduleEntryPath, "/test/some/path/components/karlbohlmark/my-module/start.js");
     mock.restore()
 }
