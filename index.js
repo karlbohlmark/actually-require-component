@@ -26,7 +26,7 @@ function componentResolve (r, parent) {
     }
     var componentPath = closestInstalledComponent(parentDir, component)
     if (!componentPath) {
-        throw Exception("Component not installed " + component)
+        throw new Error("Component not installed " + component)
     }
     
     return componentEntry(componentPath)
